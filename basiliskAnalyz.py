@@ -1,5 +1,6 @@
 import basiliskAFD
 import basiliskAP
+import reporte
 
 #-------------------------------------------- AFD ------------------------------------------------------------------
 
@@ -43,7 +44,6 @@ def getTypeNonReserv(tk):
                     if not(c == "_") and not(c.isalpha()) and not(c.isdigit()):
                         return "None"
             return "idvar"
-
 
 def analizacadenaAP(ruta):
     #print("Entra al metodo de analisis")
@@ -91,8 +91,7 @@ def analizacadenaAP(ruta):
                         needNext = False
                         esComentario = False
                     else:
-                        print(" >>> Error ")
-                        return
+                        needNext = False
                 else:
                     if character == "/":
                         needNext = True
@@ -100,7 +99,7 @@ def analizacadenaAP(ruta):
                         needNext = False
                         esComentario = True
                     else:
-                        print(" >>> Error ")
+                        print(" >>> Error en comentario apr")
                         return
             elif needNext and not esCadena:
                 if esComentario:
@@ -230,8 +229,8 @@ def analizacadenaAP(ruta):
         estadoActual = estadoSiguiente
         #Enviar a mostrar los datos con print      #obtener la cadena en lectura
         muestraProcesoPila(pilaHist, "  #  ", trnHist)
-        esValida = False
-        token = ""
+        encabezado = ["PILA","ENTRADA","TRANSICION"]
+        reporte.generaHtml("Analisis Por Automata de Pila", encabezado, HistAP)
     else:
         print(" >>> Error")
         return  
@@ -246,6 +245,8 @@ def muestraProcesoPila(pilaHist, cadena, trnHist):
     enc = aniadeespacio(encabezado, tmpila, tmentrada, tmtransi)
     cuerpo = [pilaHist, cadena, trnHist]
     crp = aniadeespacio(cuerpo, tmpila, tmentrada, tmtransi)
+    histTempo = [pilaHist, cadena, trnHist]
+    HistAP.append(histTempo.copy())
     print(sep)
     print(enc)
     print(sep)
@@ -254,7 +255,6 @@ def muestraProcesoPila(pilaHist, cadena, trnHist):
     stp = input(" >>> Presione enter para continuar...")
     print()
     print()
-
     
 def separadorvertical(n1,n2,n3):
     sep = ""
@@ -292,7 +292,7 @@ def sepCadena(indxI, cadena):
     extract = ""
     for i in range(indxI-1, len(cadena)):
         extract += cadena[i]
-    print("el texto extraido es: ", extract, " con los indices: ", indxI, " de la cadena", cadena)
+    #print("el texto extraido es: ", extract, " con los indices: ", indxI, " de la cadena", cadena)
     return extract
 
 def validaToken(estadoAct, token, consumeToken, cadena):
