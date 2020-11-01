@@ -1,9 +1,9 @@
 
-estados = ["p", "q", "f"]
-alfabeto = []
-simbolosPila = []
+estados = ["i","p","q","f"]
+
 transicion = [
-    [["p","$","$"],["q",["S0","#"]]],
+    [["i","$","$"],["p",["#"]]],
+    [["p","$","$"],["q",["S0"]]],
 
     [["q","$","S0"],["q",["let","S1"]]],
     [["q","$","S0"],["q",["var","S1"]]],
@@ -11,16 +11,16 @@ transicion = [
     [["q","$","S0"],["q",["if","S5"]]],
     [["q","$","S0"],["q",["while","S5"]]],
     [["q","$","S0"],["q",["switch","S7"]]],
-    [["q","$","S0"],["q",["foreach","(","idvar","in","idvar",")","{","S0","}"]]],
-    [["q","$","S0"],["q",["idvar","(","S10",")",";"]]],
+    [["q","$","S0"],["q",["foreach","(","idvar","in","idvar",")","{","S0","}","S0"]]],
+    [["q","$","S0"],["q",["idvar","(","S10",")",";","S0"]]],
     [["q","$","S0"],["q",["epsilon"]]],
 
     [["q","$","S1"],["q",["idvar","=","S2"]]],
 
-    [["q","$","S2"],["q",["cadena",";"]]],
-    [["q","$","S2"],["q",["numero",";"]]],
-    [["q","$","S2"],["q",["booleano",";"]]],
-    [["q","$","S2"],["q",["(","S3",")","=",">","{","S0","}"]]],
+    [["q","$","S2"],["q",["cadena",";","S0"]]],
+    [["q","$","S2"],["q",["numero",";","S0"]]],
+    [["q","$","S2"],["q",["booleano",";","S0"]]],
+    [["q","$","S2"],["q",["(","S3",")","=",">","{","S0","}","S0"]]],
 
     [["q","$","S3"],["q",["idvar","S4"]]],
     [["q","$","S3"],["q",["epsilon"]]],
@@ -28,12 +28,12 @@ transicion = [
     [["q","$","S4"],["q",[",","idvar","S4"]]],
     [["q","$","S4"],["q",["epsilon"]]],
     
-    [["q","$","S5"],["q",["(","S6",")","{","S0","}"]]],
+    [["q","$","S5"],["q",["(","S6",")","{","S0","}","S0"]]],
 
     [["q","$","S6"],["q",["idvar"]]],
     [["q","$","S6"],["q",["booleano"]]],
 
-    [["q","$","S7"],["q",["(","idvar",")","{","S8","}"]]],
+    [["q","$","S7"],["q",["(","idvar",")","{","S8","}","S0"]]],
 
     [["q","$","S8"],["q",["case","S13",":","S0","S9"]]],
     [["q","$","S8"],["q",["default",":","S0","S9"]]],
@@ -86,12 +86,10 @@ transicion = [
     [["q","#","#"],["f",["epsilon"]]],
 ]
 
-estini = "p"
-estacept = ["f"]
 pila = []
 
 # [        --------------- 0 -----------------             -------------------- 1 --------------------
-#         ["estadoAct","caracter","descompila"],          ["estadoSig",     ["Elementos", "Compilados"] ]   z, M, N, z
+#         ["estadoAct","caracter","quitaPila"],          ["estadoSig",     ["Push", "Pila"] ]
 #           ----0----  ----1----   -----2-----             -----0-----      --------------1------------
 #                                                                           ------n-----  -----n1------ 
 # ]
@@ -99,13 +97,6 @@ pila = []
 #METODOS DE RETORNO
 def getEstados():
     return estados
-def getAlfa():
-    return alfabeto
-def getEstIni():
-    global estini
-    return estini
-def getEstAcep():
-    return estacept
 def getTran():
     return transicion
 #PILA
@@ -128,11 +119,9 @@ def getStatusPila():
     if pilaVacia():
         ep = "Vacío"
     for p in list(reversed(pila)):
-        ep = ep + p
+        ep = ep + " " + p
     return ep
 def printPila():
     print(pila)
 def limpiaPila():
     pila.clear()
-    #pila.append("#")
-    #pila.append("S0")
