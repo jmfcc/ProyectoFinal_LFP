@@ -36,10 +36,10 @@ transicion = [
     [["q","$","S7"],["q",["(","idvar",")","{","S8","}","S0"]]],
 
     [["q","$","S8"],["q",["case","S13",":","S0","S9"]]],
-    [["q","$","S8"],["q",["default",":","S0","S9"]]],
     [["q","$","S8"],["q",["epsilon"]]],
 
     [["q","$","S9"],["q",["case","S13",":","S0","S9"]]],
+    [["q","$","S9"],["q",["default",":","S0","S9"]]],
     [["q","$","S9"],["q",["break",";","S8"]]],
     [["q","$","S9"],["q",["epsilon"]]],
 
@@ -77,6 +77,7 @@ transicion = [
     [["q",";",";"],["q",["epsilon"]]],
     [["q",",",","],["q",["epsilon"]]],
     [["q","case","case"],["q",["epsilon"]]],
+    [["q","default","default"],["q",["epsilon"]]],
     [["q","cadena","cadena"],["q",["epsilon"]]],
     [["q","numero","numero"],["q",["epsilon"]]],
     [["q","booleano","booleano"],["q",["epsilon"]]],
