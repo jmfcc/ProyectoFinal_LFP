@@ -224,7 +224,7 @@ def analizacadenaAP(ruta):
                             print(" >>> Error")
                             return  
     #Validar si la pila es ["#", "S0"]
-    esValida, estadoSiguiente, pilaHist, trnHist = validaToken(estadoActual, "#", False, "      ")
+    esValida, estadoSiguiente, pilaHist, trnHist = validaToken(estadoActual, "#", False, "  #  ")
     if esValida:
         estadoActual = estadoSiguiente
         #Enviar a mostrar los datos con print      #obtener la cadena en lectura
@@ -232,7 +232,7 @@ def analizacadenaAP(ruta):
         encabezado = ["PILA","ENTRADA","TRANSICION"]
         reporte.generaHtml("Analisis Por Automata de Pila", encabezado, HistAP)
     else:
-        print(" >>> Error")
+        print(" >>> Error, la pila no esta vacía")
         return  
     archivo.close()
 
