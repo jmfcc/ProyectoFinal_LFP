@@ -4,6 +4,7 @@ def head():
     print("::::::::::::::::::::::::::::::::::::: BASILISK :::::::::::::::::::::::::::::::::::::"
     + "  \n:::::::::::::::::::::::::::::::::::::: SYSTEM ::::::::::::::::::::::::::::::::::::::")
 
+scriptJs = ""
 def menu():
     head()
     print()
@@ -24,13 +25,18 @@ def menu():
                     if opcion == 2:
                         pass
                     if opcion == 3:
+                        #print("si entra a la opcion 3")
+                        global scriptJs
                         if scriptJs:
+                            #print("si entra a al if")
                             basiliskAnalyz.analizacadenaAP(scriptJs)
+                        else:
+                            print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 4:
                         pass
                     if opcion == 5:
                         print("Saliendo del sistema...")
-                        mostrar()
+                        #mostrar()
                         return
                 else:
                     print("Opción no disponible")
@@ -39,14 +45,14 @@ def menu():
         except:
             print("<< Esa mamada no es un numero >>")
 
-scriptJs = ""
 
 
 def cargar():
     ruta = input(">>> Ingrese la ruta del archivo: ")
     if ruta:
         global scriptJs
-        scriptJs = open (ruta)
+        scriptJs = ruta
+        #scriptJs = open (ruta)
         print("Archivo Cargado")
 
 def mostrar():
