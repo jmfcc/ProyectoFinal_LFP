@@ -185,7 +185,7 @@ def analizacadenaAP(ruta):
                         #print("Guardando el Tok: ", character, " en: ", countCol, " y el token es: ", token)
                         token += character
                         if len(token) == 1:
-                            print("Guardando el indxTok: ", countCol)
+                            #print("Guardando el indxTok: ", countCol)
                             indxItkn = countCol                            
                         elif countCol == len(line): #Si llega al final de la linea verificará si hay un token almacenado y lo evaluará
                             if token:
