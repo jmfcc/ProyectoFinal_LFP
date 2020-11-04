@@ -32,15 +32,14 @@ GRAMATICA UTILIZADA
 
     S7 -> ( idvar ) { S8 } S0
 
-    S8 -> case S13 : S0 S9
-        | default : S0 S9
+    S8 -> case S13 : S0 S9 S8
+        | default : S0 S9 S8
         | epsilon
 
-    S9 -> case S13 : S0 S9
-        | break ; S8
+    S9 -> break ;
         | epsilon
 
-    S10->  cadena S11
+    S10-> cadena S11
         | numero S11
         | booleano S11
         | idvar S11
@@ -49,11 +48,11 @@ GRAMATICA UTILIZADA
     S11-> , S12
         | epsilon
 
-    S12->  cadena S11
+    S12-> cadena S11
         | numero S11
         | booleano S11
         | idvar S11
 
-    S13->  cadena
+    S13-> cadena
         | numero
         | booleano

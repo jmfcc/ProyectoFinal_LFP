@@ -367,7 +367,7 @@ def analizacadenaAP(ruta):
                             elif isTypeNonReserv(token):
                                 esValida, estadoSiguiente, pilaHist, trnHist = validaToken(estadoActual, getTypeNonReserv(token), False, sepCadena(indxItkn,line))
                             else:
-                                print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                                print(" >>> Error token desconocido: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
                                 return
                             if esValida:
                                 estadoActual = estadoSiguiente
@@ -376,7 +376,7 @@ def analizacadenaAP(ruta):
                                 esValida = False
                                 token = ""
                             else:
-                                print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                                print(" >>> Error comp: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
                                 return
                         #Mando a analizar el caracter directamente
                         esValida, estadoSiguiente, pilaHist, trnHist = validaToken(estadoActual, character, False, sepCadena(countCol,line))
@@ -387,7 +387,7 @@ def analizacadenaAP(ruta):
                             esValida = False
                             token = ""
                         else:
-                            print(" >>> Error: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
+                            print(" >>> Error simp: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
                             return
                     else:
                         #print("Guardando el Tok: ", character, " en: ", countCol, " y el token es: ", token)
@@ -555,7 +555,6 @@ def dameFormato(tr):
 
 #-------------------------------------------- Grafo -----------------------------------------------------------------
 
-
 def afdDiag(ruta):
     #print("Entra al metodo de analisis")
     tknsRDiag.clear()
@@ -720,8 +719,6 @@ def afdDiag(ruta):
                 pass
     archivo.close()
 
-    
-
 tknsRDiag = []
 unknowRDiag = []
 def agregaTokenDiag(tipo, token, tipoToken):
@@ -731,3 +728,4 @@ def agregaTokenDiag(tipo, token, tipoToken):
     else:
         unknowRDiag.append(token)
         #print(unkTok)
+
