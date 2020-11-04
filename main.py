@@ -36,7 +36,7 @@ def menu():
                         else:
                             print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 4:
-                        pass
+                        print("Opción no disponible en la versión beta")
                     if opcion == 5:
                         print("Saliendo del sistema...")
                         #mostrar()
@@ -47,16 +47,18 @@ def menu():
                 print("Debe ingresar una opción")
         except:
             print("<< La opcion solicitada no esta disponible >>")
+        print()
+        print()
 
 
 
 def cargar():
-    ruta = input(">>> Ingrese la ruta del archivo: ")
+    ruta = input(" >>> Ingrese la ruta del archivo: ")
     if ruta:
         global scriptJs
         scriptJs = ruta
         #scriptJs = open (ruta)
-        print("Archivo Cargado")
+        print(" >>> Archivo Cargado")
 
 def mostrar():
     global scriptJs
