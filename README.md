@@ -57,4 +57,3 @@ GRAMATICA UTILIZADA
     S13->  cadena
         | numero
         | booleano
-    */
