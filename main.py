@@ -16,6 +16,7 @@ def menu():
         print("4- Diagrama de Bloques")
         print("5- Salir")
         print()
+        global scriptJs
         try:
             opcion = int(input("Seleccione una opción: >> "))
             if opcion:
@@ -23,10 +24,12 @@ def menu():
                     if opcion == 1:
                         cargar()
                     if opcion == 2:
-                        pass
+                        if scriptJs:
+                            basiliskAnalyz.analizacadenaAFD(scriptJs)
+                        else:
+                            print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 3:
                         #print("si entra a la opcion 3")
-                        global scriptJs
                         if scriptJs:
                             #print("si entra a al if")
                             basiliskAnalyz.analizacadenaAP(scriptJs)
@@ -43,7 +46,7 @@ def menu():
             else:
                 print("Debe ingresar una opción")
         except:
-            print("<< Esa mamada no es un numero >>")
+            print("<< La opcion solicitada no esta disponible >>")
 
 
 
