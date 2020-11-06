@@ -32,12 +32,15 @@ def generaHtml(name, head, reg):
         + "        <tbody>\n" + linesep)
     filehtml.write("            <tr>\n" + linesep)
         
+    filehtml.write("                <th> - No. -</th>\n" + linesep)
     for elem in head:
         filehtml.write("                <th>"+ str(elem).upper() + "</th>\n" + linesep)
     filehtml.write("            </tr>" + linesep)
-    
+    countR = 0
     for rows in reg:
+        countR += 1
         filehtml.write("            <tr>\n" + linesep)
+        filehtml.write("                <td>" + str(countR) + "</td>\n" + linesep)
         for cols in rows:
             filehtml.write("                <td>" + str(cols) + "</td>\n" + linesep)
         filehtml.write("            </tr>\n" + linesep)
