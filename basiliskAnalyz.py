@@ -1,7 +1,7 @@
 import basiliskAFD
 import basiliskAP
 import reporte
-
+import generaGraf
 #-------------------------------------------- AFD ------------------------------------------------------------------
 tknsRead = []
 unknowRead = []
@@ -595,6 +595,7 @@ def afdDiag(ruta):
                     indxItkn = countCol
                     estadoActual = "S8"
                 elif character == "\"":
+                    token += "\\"
                     token += character
                     indxItkn = countCol
                     estadoActual = "S9"
@@ -689,12 +690,15 @@ def afdDiag(ruta):
                             estadoActual = estadoSiguiente
                             indxItkn = countCol
             elif estadoActual == "S9":
-                token += character
                 if character == "\"":
+                    token += "\\"
+                    token += character
                     #guardar token cadena
                     agregaTokenDiag("reserv", token, "cadena")
                     token = ""
                     estadoActual = "S0"
+                else:
+                    token += character
             elif estadoActual == "S11":
                 if character.isdigit() or character == ".":
                     token += character
@@ -719,13 +723,430 @@ def afdDiag(ruta):
                 pass
     archivo.close()
 
+    #muestratknsRDiag()
+    #print("AnalizarTokns")
+    analizaTokens()
+
+#[token, tipo]
 tknsRDiag = []
 unknowRDiag = []
 def agregaTokenDiag(tipo, token, tipoToken):
     if tipo == "reserv":
-        tknsRDiag.append(token)
+        tknsRDiag.append([token,tipoToken])
         #print(infoToken)
     else:
         unknowRDiag.append(token)
         #print(unkTok)
 
+def muestratknsRDiag():
+    cont = 1
+    for tkRD in tknsRDiag:
+        print (cont, " - ", tkRD)
+        cont += 1
+
+# nodo =  [[ tipo-valor, numeroNodo, nivel ]]     tipo-valor = ASIGNACIÓN\nvarUno
+nodo = []
+#  relación =  [[ numeroNodoSalida, numeroNodoLlegada ]]
+enlaces = []
+
+def analizaTokens():
+    #muestratknsRDiag()
+    #print(tknsRDiag)
+    nodo.clear()
+    enlaces.clear()
+    nodoActual = []
+    contadorNivel = 1
+    contadorNodo = 1
+    iCount = 0
+    while (iCount < len(tknsRDiag)):
+        #print(iCount, " - ", len(tknsRDiag))
+        #print(contadorNodo)
+        #print(nodoActual)
+        if tknsRDiag[iCount][1] == "let" or tknsRDiag[iCount][1] == "const" or tknsRDiag[iCount][1] == "var":
+            iCount += 1
+            nameVar = tknsRDiag[iCount][0] #Obtengo el nombre de los tokens
+            if tknsRDiag[iCount+2][1] == "(":
+                nameVar = "Definicion:\\n" + nameVar
+                #print(nameVar)
+                iCount += 2
+                nodAux = [nameVar, contadorNodo, contadorNivel]
+                nodo.append(nodAux.copy())
+                if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                    enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                    enlaces.append(enlace.copy())
+                    if isSameLvl(nodoActual, contadorNivel): 
+                        nodoActual.pop()
+                nodoActual.append(nodAux.copy())
+                contadorNodo += 1
+                #print(iCount)
+                if tknsRDiag[iCount+1][1] == ")":
+                    iCount += 1
+                    iCount += 3           #-------------- Evalua un cierre con }
+                    if tknsRDiag[iCount][1] == "}":
+                        iCount += 1
+                        try:
+                            if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                                nodoActual.pop()
+                                contadorNivel -= 1
+                            elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                                nodoActual.pop()
+                                contadorNivel -= 1
+                        except:
+                            pass
+                    else:
+                        contadorNivel += 1
+                else:
+                    contadorNivel += 1
+                    iCount += 1
+                    concat = ""
+                    init = True
+                    #print("read param")
+
+                    while tknsRDiag[iCount][1] != ")":
+                        #print("params")
+                        if init:
+                            concat += tknsRDiag[iCount][0]
+                            init = False
+                        else:
+                            if tknsRDiag[iCount][1] == ",":
+                                concat = concat + tknsRDiag[iCount][0]
+                            else:
+                                concat = concat + " " + tknsRDiag[iCount][0]
+                        iCount += 1
+                    nameVar = "Parametros:\\n" + concat
+                    nodAux = [nameVar, contadorNodo, contadorNivel]
+                    nodo.append(nodAux.copy())
+
+                    enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                    enlaces.append(enlace.copy())
+
+                    nodoActual.append(nodAux.copy())
+                    contadorNodo += 1
+                    iCount += 3
+                    if tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                        iCount += 1
+                        try:
+                            if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                                nodoActual.pop()
+                                contadorNivel -= 1
+                            elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                                nodoActual.pop()
+                                contadorNivel -= 1
+                        except:
+                            pass
+            else:
+                nameVar = "Asignacion:\\n" + nameVar
+                #print(nameVar)
+                iCount += 2  # POSICION DEL VALOR ASGINADO
+                nodAux = [nameVar, contadorNodo, contadorNivel]
+                nodo.append(nodAux.copy())
+                
+                if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                    enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                    enlaces.append(enlace.copy())
+                    if isSameLvl(nodoActual, contadorNivel): 
+                        nodoActual.pop()
+                nodoActual.append(nodAux.copy())
+                contadorNodo += 1
+                iCount += 2
+                try:
+                    if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                    elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                except:
+                    pass
+        elif tknsRDiag[iCount][1] == "}":
+            nodoActual.pop()
+            #print("disminuyendo cuando: ", contadorNivel, contadorNodo)
+            contadorNivel -= 1
+            iCount += 1
+            try:
+                if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                    nodoActual.pop()
+                    contadorNivel -= 1
+                elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                    nodoActual.pop()
+                    contadorNivel -= 1
+            except:
+                pass
+        elif tknsRDiag[iCount][1] == "if" or tknsRDiag[iCount][1] == "while":
+            nameVar = "Sentencia:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+            contadorNivel += 1
+
+            iCount += 2  # POSICION DEL VALOR CONDICIONAL
+            nameVar = "Condicion:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+            iCount += 3
+            if tknsRDiag[iCount][1] == "}":
+                nodoActual.pop()
+                contadorNivel -= 1
+                iCount += 1
+                try:
+                    if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                    elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                except:
+                    pass
+        elif tknsRDiag[iCount][1] == "switch":
+            nameVar = "Sentencia:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+            contadorNivel += 1
+
+            iCount += 2  # POSICION DEL VALOR CONDICIONAL
+            nameVar = "Condicion:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+            iCount += 3
+            if tknsRDiag[iCount][1] == "}":
+                nodoActual.pop()
+                contadorNivel -= 1
+                iCount += 1
+                try:
+                    if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                    elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                except:
+                    pass
+        elif tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                if tknsRDiag[iCount][1] == "case":
+                    nameVar = "Case:\\n" + tknsRDiag[iCount+1][0]
+                else:
+                    nameVar = "Default:"
+                #print(nameVar)
+                nodAux = [nameVar, contadorNodo, contadorNivel]
+                nodo.append(nodAux.copy())
+                
+                if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                    enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                    enlaces.append(enlace.copy())
+                    if isSameLvl(nodoActual, contadorNivel): 
+                        nodoActual.pop()
+                nodoActual.append(nodAux.copy())
+                contadorNodo += 1
+                if tknsRDiag[iCount][1] == "case":
+                    iCount += 3
+                else:
+                    iCount += 2
+
+                if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                    pass # Llevar condicion a los cierres de sentencias } y cierre de ;
+                elif tknsRDiag[iCount][1] == "}":
+                    nodoActual.pop()
+                    contadorNivel -= 1
+                    iCount+=1
+                else:
+                    contadorNivel += 1
+        elif tknsRDiag[iCount][1] == "break":
+            nameVar = "break;"
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+            iCount += 2
+            
+            contadorNivel -= 1
+            nodoActual.pop()
+        elif tknsRDiag[iCount][1] == "foreach":
+            nameVar = "Sentencia:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+
+            contadorNivel += 1
+            iCount += 2  # POSICION DEL ITERADOR
+            
+            nameVar = "Iterador:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+
+            iCount += 2  # POSICION DE LA COLECCION
+
+            nameVar = "Coleccion:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+            
+            iCount += 3  # POSICION DE LA COLECCION
+
+            if tknsRDiag[iCount][1] == "}":
+                nodoActual.pop()
+                contadorNivel -= 1
+                iCount += 1
+                try:
+                    if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                    elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                except:
+                    pass
+        elif tknsRDiag[iCount][1] == "idvar":
+            nameVar = "Llamada:\\n" + tknsRDiag[iCount][0]
+            #print(nameVar)
+            nodAux = [nameVar, contadorNodo, contadorNivel]
+            nodo.append(nodAux.copy())
+            
+            if nodoActual: # ---------------- PARA ENLAZARLOS ----------------------
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+                if isSameLvl(nodoActual, contadorNivel): 
+                    nodoActual.pop()
+            nodoActual.append(nodAux.copy())
+            contadorNodo += 1
+
+            contadorNivel += 1
+            iCount += 2 #POSICION DE PARAMETROS o )
+            if tknsRDiag[iCount][1] == ")":
+                contadorNivel -= 1
+                iCount += 2
+                try:
+                    if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                    elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                except:
+                    pass
+            else:
+                concat = ""
+                init = True
+                while tknsRDiag[iCount][1] != ")":
+                    #print("params")
+                    if init:
+                        concat += tknsRDiag[iCount][0]
+                        init = False
+                    else:
+                        if tknsRDiag[iCount][1] == ",":
+                            concat = concat + tknsRDiag[iCount][0]
+                        else:
+                            concat = concat + " " + tknsRDiag[iCount][0]
+                    iCount += 1
+                nameVar = "Parametros:\\n" + concat
+                nodAux = [nameVar, contadorNodo, contadorNivel]
+                nodo.append(nodAux.copy())
+
+                enlace = [nodoActual[len(nodoActual)-1][1], contadorNodo]
+                enlaces.append(enlace.copy())
+
+                #nodoActual.append(nodAux.copy())
+                contadorNodo += 1
+                iCount += 2
+                #nodoActual.pop()
+                contadorNivel -= 1
+                try:
+                    if tknsRDiag[iCount][1] == "case" or tknsRDiag[iCount][1] == "default":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                    elif (nodoActual[len(nodoActual)-2][0] == "Default:" or nodoActual[len(nodoActual)-2][0].__contains__("Case:")) and tknsRDiag[iCount][1] == "}":
+                        nodoActual.pop()
+                        contadorNivel -= 1
+                except:
+                    pass
+        # if contadorNodo == 38:
+        #     print("--------------",iCount)
+        #     break
+    #muestraDiag()
+    print(" >>> Generando Diagrama...")
+    generaGraf.grafo(nodo, enlaces)
+
+def muestraDiag():
+    for n in nodo:
+        print(n)
+    for e in enlaces:
+        print(e)
+
+def isSameLvl(listN, lvl):
+    tm = len(listN) - 1
+    if listN[tm][2] == lvl:
+        return True
+    else:
+        return False
+
+def getCorrNode(listN):
+    tm = len(listN) - 1
+    return listN[tm][1]
