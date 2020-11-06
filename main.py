@@ -36,7 +36,11 @@ def menu():
                         else:
                             print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 4:
-                        print("Opción no disponible en la versión beta")
+                        #print("Opción no disponible en la versión beta")
+                        if scriptJs:
+                            basiliskAnalyz.afdDiag(scriptJs)
+                        else:
+                            print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 5:
                         print("Saliendo del sistema...")
                         #mostrar()
