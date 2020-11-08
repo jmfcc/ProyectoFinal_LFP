@@ -1,4 +1,5 @@
 import basiliskAnalyz
+import os
 
 def head():
     print("::::::::::::::::::::::::::::::::::::: BASILISK :::::::::::::::::::::::::::::::::::::"
@@ -29,10 +30,19 @@ def menu():
                         else:
                             print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 3:
-                        #print("si entra a la opcion 3")
                         if scriptJs:
-                            #print("si entra a al if")
-                            basiliskAnalyz.analizacadenaAP(scriptJs)
+                            basiliskAnalyz.analizacadenaAFD_AP(scriptJs)
+                            #basiliskAnalyz.analizacadenaAP(scriptJs)
+                            # print(" >>> [1] AFD y AP")
+                            # print(" >>> [2] AP")
+                            # mode = input(" >>>  Selecciona un modo: ")
+                            # if mode:
+                            #     if mode == "1":
+                            #     elif mode == "2":
+                            #     else:
+                            #         print(" >>>  Debe seleccionar 1 o 2.")
+                            # else:
+                            #     print(" >>> Debe seleccionar un modo.")
                         else:
                             print(">>> Error: No hay ningun archivo en memoria..")
                     if opcion == 4:
@@ -51,6 +61,7 @@ def menu():
                 print("Debe ingresar una opción")
         except:
             print("<< La opcion solicitada no esta disponible >>")
+        stp = input(" >>> Persione enter para continuar... ")
         print()
         print()
 
@@ -58,11 +69,22 @@ def menu():
 
 def cargar():
     ruta = input(" >>> Ingrese la ruta del archivo: ")
+    print()
     if ruta:
-        global scriptJs
-        scriptJs = ruta
-        #scriptJs = open (ruta)
-        print(" >>> Archivo Cargado")
+        if os.path.isfile(ruta):
+            ph, fh = os.path.split(ruta)
+            nombre, extension = os.path.splitext(fh)
+            if extension == ".js":
+                global scriptJs
+                scriptJs = ruta
+                print(" >>> Archivo Cargado -- ", nombre + extension,"\n")
+            else:
+                print(" >>> El archivo no es de extensión .js")
+        else:
+            print(" >>> Fichero no encontrado")
+    else:
+        print(" >>> Debe ingresar una ruta para usar el archivo deseado")
+
 
 def mostrar():
     global scriptJs
