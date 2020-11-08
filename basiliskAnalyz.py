@@ -758,7 +758,9 @@ def analizaTokens():
     contadorNivel = 1
     contadorNodo = 1
     iCount = 0
+    contadorCiclos = 0
     while (iCount < len(tknsRDiag)):
+        contadorTmp = contadorNodo
         #print(iCount, " - ", len(tknsRDiag))
         #print(contadorNodo)
         #print(nodoActual)
@@ -1127,9 +1129,12 @@ def analizaTokens():
                         contadorNivel -= 1
                 except:
                     pass
-        # if contadorNodo == 38:
-        #     print("--------------",iCount)
-        #     break
+        if contadorNodo == contadorTmp:
+            contadorCiclos += 1
+
+        if contadorCiclos > 50:
+            print(" >>> Algo salio mal :( ciclado en nodo No. ", contadorNodo, " token fuera del orden: ", tknsRDiag[iCount][0])
+            break
     #muestraDiag()
     print(" >>> Generando Diagrama...")
     generaGraf.grafo(nodo, enlaces)
@@ -1150,3 +1155,313 @@ def isSameLvl(listN, lvl):
 def getCorrNode(listN):
     tm = len(listN) - 1
     return listN[tm][1]
+
+
+
+
+
+
+#-------------------------------------------- AP con AFD ------------------------------------------------------------------
+
+def analizacadenaAFD_AP(ruta):
+    #print("Entra al metodo de analisis")
+    HistAP.clear()
+    basiliskAP.limpiaPila()
+    archivo = open(ruta, "r")
+    estadoActualPila = "i"
+    estadoActual = "S0"
+    estadoSiguiente = "None"
+    countRow = 0
+    indxItkn = 0
+    token = ""
+    for lines in archivo:
+        countRow += 1
+        countCol = 0
+        line = lines.rstrip()
+        #if line:
+            #print(line)
+        for character in line:
+            countCol += 1
+            if estadoActual == "S0":
+                if character == "/":
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S1"
+                elif character == "(" or character == ")" or character == "{" or character == "}" or character == "," or character == ":" or character == ";":
+                    
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, character, False, sepCadena(countCol,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(countCol,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
+                        return
+                    estadoActual = "S0"
+
+                elif character == "=":
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S6"
+                elif character == "_":
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S8"
+                elif character.isalpha():
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S8"
+                elif character == "\"":
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S9"
+                elif character == "-":
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S11"
+                elif character.isdigit():
+                    token += character
+                    indxItkn = countCol
+                    estadoActual = "S11"
+                else:
+                    #registrar en no reconocidos
+                    # if character and not character.isspace():
+                    #     agregaToken("no reserv", character, "", countRow, countCol)
+                    token = ""
+            elif estadoActual == "S1":
+                if character == "*":
+                    token += character
+                    estadoActual = "S2"
+                else:
+                    #registrar en no reconocidos
+                    # agregaToken("no reserv", token, "", countRow, indxItkn)
+                    token = ""
+                    estadoActual = "S0"
+                    if character and not character.isspace():
+                        estadoSiguiente = analizadorAFDauxiliar(estadoActual, character)
+                        if estadoSiguiente == "S0":
+                            esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, character, False, sepCadena(countCol,line))#validar si es valida jaja :v
+                            if esValida:
+                                estadoActualPila = estadoSiguientePila
+                                #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                                muestraProcesoPila(pilaHist, sepCadena(countCol,line), trnHist)
+                                token = ""
+                            else:
+                                print(" >>> Error: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
+                                return
+                        elif estadoSiguiente == "None":
+                            # agregaToken("no reserv", character, "", countRow, countCol)
+                            pass
+                        else:
+                            token += character
+                            estadoActual = estadoSiguiente
+                            indxItkn = countCol
+            elif estadoActual == "S2":
+                token += character
+                if character == "*":
+                    estadoActual = "S3"
+            elif estadoActual == "S3":
+                token += character
+                if character == "/":
+                    # agregaToken("reserv", token, "comment", countRow, countCol)
+                    estadoActual = "S0"
+                    token = ""
+            elif estadoActual == "S6":
+                if character == ">":
+                    token += character
+                    #guardar como funcion flecha
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, token, False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    token = ""
+                    estadoActual = "S0"
+                else:
+                    #guardar como signo igual
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, token, False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    token = ""
+                    estadoActual = "S0"
+                    #evaluar nueva transición
+                    if not character == "" and not character.isspace():
+                        estadoSiguiente = analizadorAFDauxiliar(estadoActual, character)
+                        if estadoSiguiente == "S0":
+                            #agregaToken("reserv", character, character, countRow, countCol)
+                            esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, character, False, sepCadena(countCol,line))#validar si es valida jaja :v
+                            if esValida:
+                                estadoActualPila = estadoSiguientePila
+                                #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                                muestraProcesoPila(pilaHist, sepCadena(countCol,line), trnHist)
+                                token = ""
+                            else:
+                                print(" >>> Error: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
+                                return
+                        elif estadoSiguiente == "None":
+                            pass
+                        else:
+                            token += character
+                            estadoActual = estadoSiguiente
+                            indxItkn = countCol
+            elif estadoActual == "S8":
+                if character == "_" or character.isalpha() or character.isdigit():
+                    token += character
+                else:
+                    #guardar token
+                    if isTypeComp(token):
+                        esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, token, False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    elif isTypeNonReserv(token):
+                        esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, getTypeNonReserv(token), False, sepCadena(indxItkn,line))
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        esValida = False
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    estadoActual = "S0"
+                    #evaluar nueva transicion
+                    if not character == "" and not character.isspace():
+                        estadoSiguiente = analizadorAFDauxiliar(estadoActual, character)
+                        if estadoSiguiente == "S0":
+                            esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, character, False, sepCadena(countCol,line))#validar si es valida jaja :v
+                            if esValida:
+                                estadoActualPila = estadoSiguientePila
+                                #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                                muestraProcesoPila(pilaHist, sepCadena(countCol,line), trnHist)
+                                token = ""
+                            else:
+                                print(" >>> Error: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
+                                return
+                        elif estadoSiguiente == "None":
+                            pass
+                        else:
+                            token += character
+                            estadoActual = estadoSiguiente
+                            indxItkn = countCol
+            elif estadoActual == "S9":
+                token += character
+                if character == "\"":
+                    #guardar token cadena
+                    #agregaToken("reserv", token, "cadena", countRow, indxItkn)
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, "cadena", False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    estadoActual = "S0"
+            elif estadoActual == "S11":
+                if character.isdigit() or character == ".":
+                    token += character
+                else:
+                    #guardar token numero
+                    #agregaToken("reserv", token, "numero", countRow, indxItkn)
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, "numero", False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    token = ""
+                    estadoActual = "S0"
+                    #evaluar nueva transicion
+                    if not character == "" and not character.isspace():
+                        estadoSiguiente = analizadorAFDauxiliar(estadoActual, character)
+                        if estadoSiguiente == "S0":
+                            esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, character, False, sepCadena(countCol,line))#validar si es valida jaja :v
+                            if esValida:
+                                estadoActualPila = estadoSiguientePila
+                                #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                                muestraProcesoPila(pilaHist, sepCadena(countCol,line), trnHist)
+                                token = ""
+                            else:
+                                print(" >>> Error: ", sepCadena(countCol, line), " Fila: ", countRow, "  Col: ", countCol)
+                                return
+                        elif estadoSiguiente == "None":
+                            pass
+                        else:
+                            token += character
+                            estadoActual = estadoSiguiente
+                            indxItkn = countCol
+
+            if len(line) == countCol:
+                if estadoActual == "S6":
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, token, False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    token = ""
+                    estadoActual = "S0"
+                elif estadoActual == "S8":
+                    if isTypeComp(token):
+                        esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, token, False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    elif isTypeNonReserv(token):
+                        esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, getTypeNonReserv(token), False, sepCadena(indxItkn,line))
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        esValida = False
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    estadoActual = "S0"
+                elif estadoActual == "S9":
+                    print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                    return
+                elif estadoActual == "S11":
+                    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, "numero", False, sepCadena(indxItkn,line))#validar si es valida jaja :v
+                    if esValida:
+                        estadoActualPila = estadoSiguientePila
+                        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+                        muestraProcesoPila(pilaHist, sepCadena(indxItkn,line), trnHist)
+                        token = ""
+                    else:
+                        print(" >>> Error: ", sepCadena(indxItkn, line), " Fila: ", countRow, "  Col: ", indxItkn)
+                        return
+                    token = ""
+                    estadoActual = "S0"
+    esValida, estadoSiguientePila, pilaHist, trnHist = validaToken(estadoActualPila, "#", False, "  #  ")
+    if esValida:
+        estadoActualPila = estadoSiguientePila
+        #Enviar a mostrar los datos con print      #obtener la cadena en lectura
+        muestraProcesoPila(pilaHist, "  #  ", trnHist)
+        encabezado = ["PILA","ENTRADA","TRANSICION"]
+        reporte.generaHtml("Analisis Por Automata de Pila", encabezado, HistAP)
+    else:
+        print(" >>> Error, fin del archivo, la pila no esta vacía")
+        return  
+    archivo.close()
